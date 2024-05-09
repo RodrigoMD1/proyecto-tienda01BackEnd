@@ -18,21 +18,40 @@ export class Producto {
     /////////////////////////////////////////////////////////////////////
 
     @Column('float', {
-
+        default: 0
     })
     precio: number;
 
     /////////////////////////////////////////////////////////////////////
-
+    @Column('float', {
+        default: 0
+    })
     stock: number;
 
     /////////////////////////////////////////////////////////////////////
-
-    talles: boolean;
+    @Column('text', {
+        array: true   //esto es un arreglo en string
+    })
+    talles: string[];
 
     /////////////////////////////////////////////////////////////////////
 
-
+    @Column('text', {
+        array: true,
+        default: []
+    })
     tags: string[]
     /////////////////////////////////////////////////////////////////////
+
+    // TODO imagenes 
+
+
+    /////////////////////////////////////////////////////////////////////
+
+
+    // TODO averiguar si poner el beforeUpdate para el slug que no entiendo la funcionalidad del slug 
+    //@BeforeUpdate()
+    //checkSlugInsert(){}
+
+
 }
