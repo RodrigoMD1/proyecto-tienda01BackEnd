@@ -2,9 +2,11 @@ import { BadRequestException, Injectable, InternalServerErrorException, Unauthor
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
-import { JwtModule } from '@nestjs/jwt';
 import { CreateUserDto, LoginUserDto } from './dto';
 import * as bcrypt from 'bcrypt';
+import { JwtPayload } from './interfaces/jwt-payload.interface';
+import { JwtService } from '@nestjs/jwt';
+
 
 
 @Injectable()
@@ -14,7 +16,7 @@ export class AuthService {
     @InjectRepository(User)
 
     private readonly userRepository: Repository<User>,
-    private readonly jwtService: JwtModule,
+    private readonly jwtService: JwtService,
 
   ) { }
 
@@ -47,7 +49,7 @@ export class AuthService {
 
   async login(loginUserDto: LoginUserDto) {
 
-    const { password, email } = loginUserDto;
+    const { contraseña, email } = loginUserDto;
 
     const user = await this.userRepository.findOne({
       where: { email },
@@ -57,7 +59,7 @@ export class AuthService {
     if (!user)
       throw new UnauthorizedException('las credenciales no son validas (email)');
 
-    if (!bcrypt.compareSync(password, user.password))
+    if (!bcrypt.compareSync(contraseña, user.password))
       throw new UnauthorizedException('las credenciales no son validas (contraseña)')
 
     return {
@@ -68,6 +70,18 @@ export class AuthService {
   }
 
   ////////////////////////////////////////////////////////////////////
+
+  private getJwtToken(payload: JwtPayload) {
+
+    const token = this.jwtService.sign(payload);
+    return token;
+  }
+  
+
+  
+
+
+
 
   // manejador de errores 
 
@@ -80,7 +94,7 @@ export class AuthService {
 
   }
 
-// TODO  seguir con el jwt del token la siguiente parte sigue en las interfaces tengo que hacerlas,tambien en auth module esta el jwt que lo conecto ahi con en .env,el controller lo puedo poner cuando termino todo el auth ya que es separado de los productos es como otra pagina aparte 
+  // TODO  seguir con el jwt del token la siguiente parte sigue en las interfaces tengo que hacerlas,tambien en auth module esta el jwt que lo conecto ahi con en .env,el controller lo puedo poner cuando termino todo el auth ya que es separado de los productos es como otra pagina aparte 
 
 
 
