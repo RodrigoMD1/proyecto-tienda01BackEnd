@@ -12,11 +12,11 @@ export class LoginUserDto {
     @MaxLength(40)
     @Matches(
         /(?:(?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/, {
-        message: 'The password must have a Uppercase, lowercase letter and a number'
+        message: 'la contraseña debe tener una letra mayuscula , una letra minuscula y un numero :)'
     })
-    password: string;
+    contraseña: string;
 
 
-   
+
 
 }

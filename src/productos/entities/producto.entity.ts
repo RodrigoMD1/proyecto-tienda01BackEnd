@@ -1,3 +1,4 @@
+import { User } from "src/auth/entities/user.entity";
 import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 
 
@@ -47,7 +48,8 @@ export class Producto {
 
 
     /////////////////////////////////////////////////////////////////////
-
+    
+    user: User
 
     // TODO averiguar si poner el beforeUpdate para el slug que no entiendo la funcionalidad del slug 
     //@BeforeUpdate()
