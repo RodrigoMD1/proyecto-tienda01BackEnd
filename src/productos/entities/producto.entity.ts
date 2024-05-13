@@ -1,5 +1,6 @@
 import { User } from "src/auth/entities/user.entity";
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { ProductoImg } from "./productos-imagenes.entity";
 
 
 @Entity()
@@ -43,13 +44,24 @@ export class Producto {
     })
     tags: string[]
     /////////////////////////////////////////////////////////////////////
+    //images
+    @OneToMany(
+        () => ProductoImg,
+        (productImage) => productImage.product,
+        { cascade: true, eager: true }
+    )
+    imagenes?: ProductoImg[];
 
-    // TODO imagenes 
 
+    @ManyToOne(
+        () => User,
+        (user) => user.product,
+        { eager: true }
+    )
+    user: User
 
     /////////////////////////////////////////////////////////////////////
 
-    user: User
 
     // TODO averiguar si poner el beforeUpdate para el slug que no entiendo la funcionalidad del slug 
     //@BeforeUpdate()

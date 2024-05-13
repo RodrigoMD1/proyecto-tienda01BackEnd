@@ -1,9 +1,13 @@
-import { BadRequestException, Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { CreateProductoDto } from './dto/create-producto.dto';
 import { UpdateProductoDto } from './dto/update-producto.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Producto } from './entities/producto.entity';
-import { Repository } from 'typeorm';
+import { DataSource, DeepPartial, Repository } from 'typeorm';
+import { ProductoImg } from './entities/productos-imagenes.entity';
+import { User } from 'src/auth/entities/user.entity';
+import { PaginationDto } from 'src/common/dtos/pagination.dto';
+import { isUUID } from 'class-validator';
 
 @Injectable()
 export class ProductosService {
@@ -14,9 +18,13 @@ export class ProductosService {
   constructor(
 
     @InjectRepository(Producto)
-    private readonly productoRepositorio: Repository<Producto>
+    private readonly productoRepositorio: Repository<Producto>,
 
-    // Todo HACER EL @InjectRepository(ProductoImagenes)
+    @InjectRepository(ProductoImg)
+    private readonly productosImgRepository: Repository<ProductoImg>,
+
+    private readonly dataSource: DataSource,
+
   ) { }
 
 
@@ -26,30 +34,134 @@ export class ProductosService {
 
   ////////////////////////////////////////////////////////////////////////////////////////////
 
-  create(createProductoDto: CreateProductoDto) {
-    return 'this action return all products '
+  async create(createProductoDto: CreateProductoDto, user: User) {
+
+    try {
+
+      const { imagenes = [], ...productosDetails } = createProductoDto
+
+      const producto = this.productoRepositorio.create(
+        {
+          ...productosDetails,
+          user,
+          imagenes: imagenes.map(imagenes => ({ url: imagenes }) as DeepPartial<ProductoImg>)
+        });
+      await this.productoRepositorio.save(producto);
+      return { ...producto, imagenes }
+
+    } catch (error) {
+
+    }
+
+
   }
 
 
   ////////////////////////////////////////////////////////////////////////////////////////////
 
-  findAll() {
-    return `This action returns all productos`;
+  async findAll(paginationDto: PaginationDto) {
+
+    const { limit = 10, offset = 0 } = paginationDto
+
+    const producto = await this.productoRepositorio.find({
+      take: limit,
+      skip: offset,
+      relations: {
+        imagenes: true,
+      }
+    });
+
+    return producto.map(producto => ({
+      ...producto,
+      imagenes: producto.imagenes.map(img => img.url)
+    }))
+
   }
 
 
 
   ////////////////////////////////////////////////////////////////////////////////////////////
 
-  findOne(id: number) {
-    return `This action returns a #${id} producto`;
+  async findOne(term: string) {
+
+    let producto: Producto;
+
+    if (isUUID(term)) {
+      producto = await this.productoRepositorio.findOneBy({ id: term });
+    } else {
+      const queryBuilder = this.productoRepositorio.createQueryBuilder('prod')
+      producto = await queryBuilder
+
+        .where('UPPER(titulo) = :titulo o slug =:slug',
+          {
+            titulo: term.toUpperCase(),
+            slug: term.toLocaleLowerCase(),
+          })
+        .leftJoinAndSelect('prod.imagenes', 'prodImagenes')
+        .getOne();
+
+    }
+
+    if (!producto)
+      throw new NotFoundException(`producto con el id ${term} no encontrado`)
+    return producto;
+
   }
+
+  async finOnePlain(term: string) {
+    const { imagenes = [], ...rest } = await this.findOne(term)
+    return {
+      ...rest,
+      imagenes: imagenes.map(imagenes => imagenes.url)
+    }
+  }
+
 
   ////////////////////////////////////////////////////////////////////////////////////////////
 
 
-  update(id: string, updateProductoDto: UpdateProductoDto) {
-    return `This action updates a #${id} producto`;
+  async update(id: string, updateProductDto: UpdateProductoDto, user: User) {
+
+    const { imagenes, ...toUpdate } = updateProductDto;
+
+    const product = await this.productoRepositorio.preload({ id, ...toUpdate });
+
+    if (!product) throw new NotFoundException(`product with id ${id} not found `)
+
+    // Create query runner
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+
+    try {
+
+      if (imagenes) {
+        // esto es que en un producto puede haber muchas imagenes 
+        await queryRunner.manager.delete(ProductoImg, { product: { id } })
+
+
+        product.imagenes = imagenes.map(
+          image => this.productosImgRepository.create({ url: image })
+        )
+      }
+      product.user = user;
+
+      await queryRunner.manager.save(product);
+      //      await this.productRepository.save(product);
+      await queryRunner.commitTransaction();
+      await queryRunner.release()
+
+      return this.finOnePlain(id);
+
+    } catch (error) {
+
+      await queryRunner.rollbackTransaction();
+      await queryRunner.release();
+
+      this.handleDBExceptions(error);
+
+    }
   }
 
   ////////////////////////////////////////////////////////////////////////////////////////////
