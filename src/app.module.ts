@@ -4,6 +4,8 @@ import { ProductosModule } from './productos/productos.module';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './auth/auth.module';
+import { FilesModule } from './files/files.module';
+import { CommonModule } from './common/common.module';
 
 
 @Module({
@@ -22,6 +24,9 @@ import { AuthModule } from './auth/auth.module';
       synchronize: true,
     }),
     AuthModule,
+    ProductosModule,
+    FilesModule,
+    CommonModule
 
 
 

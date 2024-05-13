@@ -3,14 +3,19 @@ import { ProductosService } from './productos.service';
 import { ProductosController } from './productos.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Producto } from './entities/producto.entity';
+import { AuthModule } from 'src/auth/auth.module';
+import { ProductoImg } from './entities/productos-imagenes.entity';
 
 @Module({
   controllers: [ProductosController],
   providers: [ProductosService],
   imports: [
-    TypeOrmModule.forFeature([Producto]),
-    // TODO aca se agrega tambien el de ProductoImagenes 
-    
+    TypeOrmModule.forFeature([Producto, ProductoImg]),
+    AuthModule
   ],
+  exports: [
+    ProductosService
+  ]
+
 })
-export class ProductosModule {}
+export class ProductosModule { }

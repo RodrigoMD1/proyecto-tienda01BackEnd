@@ -1,24 +1,33 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { CreateProductoDto } from './dto/create-producto.dto';
 import { UpdateProductoDto } from './dto/update-producto.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Producto } from './entities/producto.entity';
-import {  Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class ProductosService {
 
 
-  @InjectRepository(Producto)
-  private readonly productoRepositorio: Repository<Producto>
+  private readonly logger = new Logger('ProductsService')
+
+  constructor(
+
+    @InjectRepository(Producto)
+    private readonly productoRepositorio: Repository<Producto>
+
+    // Todo HACER EL @InjectRepository(ProductoImagenes)
+  ) { }
 
 
-// Todo HACER EL @InjectRepository(ProductoImagenes)
+
+
+
 
   ////////////////////////////////////////////////////////////////////////////////////////////
 
   create(createProductoDto: CreateProductoDto) {
-return 'this action return all products '
+    return 'this action return all products '
   }
 
 
@@ -39,20 +48,34 @@ return 'this action return all products '
   ////////////////////////////////////////////////////////////////////////////////////////////
 
 
-  update(id: number, updateProductoDto: UpdateProductoDto) {
+  update(id: string, updateProductoDto: UpdateProductoDto) {
     return `This action updates a #${id} producto`;
   }
 
   ////////////////////////////////////////////////////////////////////////////////////////////
 
 
-
-  remove(id: number) {
-    return `This action removes a #${id} producto`;
+  async remove(id: string) {
+    const producto = await this.findOne(id)
+    await this.productoRepositorio.remove(producto)
   }
 
 
 
   ////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+  private handleDBExceptions(error: any): void {
+
+    if (error.code === '23505')
+      throw new BadRequestException(error.detail);
+
+    this.logger.error(error);
+    throw new InternalServerErrorException('Error inesperado,revisar el servidor')
+
+  }
+
+
 
 }

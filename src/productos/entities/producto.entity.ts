@@ -48,7 +48,7 @@ export class Producto {
 
 
     /////////////////////////////////////////////////////////////////////
-    
+
     user: User
 
     // TODO averiguar si poner el beforeUpdate para el slug que no entiendo la funcionalidad del slug 
