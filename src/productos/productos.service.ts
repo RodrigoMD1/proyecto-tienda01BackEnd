@@ -34,6 +34,8 @@ export class ProductosService {
 
   ////////////////////////////////////////////////////////////////////////////////////////////
 
+  //TODO averiguar que con el rol de admin puedo crear el producto en la base de datos por que en el codigo de aca abajo no me pide permiso como admin o no verifica que sos admin para poder crear un producto nuevo lo cual significa que podria crear un producto cualquiera que no sea admin si quiere 
+
   async create(createProductoDto: CreateProductoDto, user: User) {
 
     try {
