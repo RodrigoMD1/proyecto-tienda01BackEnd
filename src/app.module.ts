@@ -22,6 +22,7 @@ import { join } from 'path';
       password: process.env.DB_PASSWORD,
       autoLoadEntities: true,
       synchronize: true,
+      entities: [join(__dirname, '**', '*.entity.{ts,js}')],
     }),
     
     ServeStaticModule.forRoot({

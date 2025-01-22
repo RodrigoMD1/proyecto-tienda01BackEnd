@@ -3,8 +3,9 @@
 /node_modules
 /build
 
-.env
+/postgres
 
+.env
 
 # Logs
 logs
@@ -57,3 +58,9 @@ pids
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# Local Netlify folder
+.netlify
+
+
+/data
